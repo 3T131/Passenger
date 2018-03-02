@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.accp.dao.StayRegisterDao">
+
+
+    <sql id="JOINwhere">
+          LEFT JOIN  Predetermine ON stayregister.Predetermineid=Predetermine.Predetermineid
+            INNER JOIN  ReceiveTarget ON stayregister.receiveTargetId=ReceiveTarget.ReceiveTargetid
+            INNER JOIN  room ON stayregister.roomId=room.roomid
+            INNER JOIN  attributedetails rentOutType ON stayregister.rentOutTypeID=rentOutType.AttributeDetailsid
+            LEFT JOIN  attributedetails payWay ON stayregister.payWayId=payWay.AttributeDetailsid
+            INNER JOIN  attributedetails billunit ON stayregister.billunitid=billunit.AttributeDetailsid
+            INNER JOIN  attributedetails passengerType ON stayregister.passengerTypeId=passengerType.AttributeDetailsid
+            INNER JOIN  attributedetails isBillON ON stayregister.isBillID=isBillON.AttributeDetailsid
+              LEFT JOIN StayRegisterDetails ON StayRegisterDetails.stayRegisterID=stayregister.stayRegisterID
+             LEFT JOIN passenger ON StayRegisterDetails.passengerID=passenger.pId
+        <where>
+            <if test="params.LvKeLeiXingId!=null ">
+                and stayregister.LvKeLeiXingId=#{params.LvKeLeiXingId}
+            </if>
+            <if test="params.roomNumber!=null and params.roomNumber!='' ">
+                and room.roomNumber LIKE concat('%',#{params.roomNumber},'%')
+            </if>
+            <if test="params.isBillID!=null ">
+                and stayregister.isBillID=#{params.isBillID}
+            </if>
+            <if test="params.passengerName!=null and params.passengerName!=''">
+                and passenger.name LIKE  CONCAT('%',#{params.passengerName},'%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="listByParam" resultMap="StayRegisterMap">
+      SELECT stayregister.*,Predetermine.*,ReceiveTarget.*,room.*
+            ,rentOutType.attributeDetailsName rentOutType
+            ,payWay.attributeDetailsName payWay
+            ,billunit.attributeDetailsName billunit
+            ,passengerType.attributeDetailsName passengerType
+            ,isBillON.attributeDetailsName isBill
+               ,passenger.*
+      FROM stayregister
+          <include refid="JOINwhere"/>
+     order by stayregister.remind desc
+        limit #{qis},#{pageSize}
+    </select>
+
+    <select id="totalRow" resultType="int">
+        SELECT count(1)  FROM stayregister
+        <include refid="JOINwhere"/>
+    </select>
+
+
+
+
+
+   <resultMap id="StayRegisterMap" autoMapping="true" type="StayRegister">
+       <id property="stayRegisterId" column="stayRegisterId"/>
+       <result property="rentOutType" column="rentOutType"/>
+       <result property="payWay" column="payWay"/>
+       <result property="billUnit" column="billUnit"/>
+       <result property="passengerType" column="passengerType"/>
+       <result property="isBill" column="isBill"/>
+       <association property="predetermine" autoMapping="true" javaType="Predetermine">
+           <id property="predetermineId" column="predetermineId"/>
+       </association>
+       <association property="room" autoMapping="true" javaType="Room">
+           <id property="roomId" column="roomId"/>
+       </association>
+       <association property="receiveTarget" autoMapping="true" javaType="ReceiveTarget">
+           <id property="receiveTargetId" column="receiveTargetId"/>
+       </association>
+       <collection property="passengerList" autoMapping="true"  javaType="com.accp.entity.Passenger">
+           <id property="pId" column="pId"/>
+           <result property="papersID" column="papersID"/>
+           <result property="genderID" column="genderID"/>
+           <result property="passengerLevelID" column="passengerLevelID"/>
+           <result property="nationID" column="nationID"/>
+           <result property="name" column="name"/>
+           <result property="papersNumber" column="papersNumber"/>
+           <result property="birthDate" column="birthDate"/>
+           <result property="papersValidity" column="papersValidity"/>
+           <result property="phoneNumber" column="phoneNumber"/>
+           <result property="remarks" column="remarks"/>
+       </collection>
+   </resultMap>
+
+</mapper>
